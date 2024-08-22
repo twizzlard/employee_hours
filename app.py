@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import PyPDF2
-import camelot
+import tabula
 
 # Upload PDF file
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
@@ -10,12 +9,12 @@ if uploaded_file:
     # Save the uploaded PDF to a temporary file
     with open("/tmp/temp_pdf.pdf", "wb") as f:
         f.write(uploaded_file.getbuffer())
-
-    # Extract tables using Camelot
-    tables = camelot.read_pdf("/tmp/temp_pdf.pdf", pages='all', flavor='stream')
+    
+    # Extract tables using tabula
+    tables = tabula.read_pdf("/tmp/temp_pdf.pdf", pages='all', multiple_tables=True)
     
     # Combine all tables into one DataFrame
-    combined_df = pd.concat([table.df for table in tables], ignore_index=True)
+    combined_df = pd.concat(tables, ignore_index=True)
     
     # Display the DataFrame
     st.write("Extracted Table Data:")
