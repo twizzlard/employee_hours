@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import tabula
+import pdfplumber
 
 # Upload PDF file
 uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
@@ -10,11 +10,17 @@ if uploaded_file:
     with open("/tmp/temp_pdf.pdf", "wb") as f:
         f.write(uploaded_file.getbuffer())
     
-    # Extract tables using tabula
-    tables = tabula.read_pdf("/tmp/temp_pdf.pdf", pages='all', multiple_tables=True)
-    
-    # Combine all tables into one DataFrame
-    combined_df = pd.concat(tables, ignore_index=True)
+    # Extract tables using pdfplumber
+    with pdfplumber.open("/tmp/temp_pdf.pdf") as pdf:
+        all_tables = []
+        for page in pdf.pages:
+            tables = page.extract_tables()
+            for table in tables:
+                df = pd.DataFrame(table[1:], columns=table[0])
+                all_tables.append(df)
+                
+        # Combine all tables into one DataFrame
+        combined_df = pd.concat(all_tables, ignore_index=True)
     
     # Display the DataFrame
     st.write("Extracted Table Data:")
